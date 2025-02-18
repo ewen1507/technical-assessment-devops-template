@@ -1,8 +1,8 @@
 """Entry points for the application."""
 
+import json
 import logging
 from typing import Dict, Union
-
 
 logger = logging.getLogger()
 logger.setLevel('INFO')
@@ -44,16 +44,25 @@ def lambda_handler(event: LambdaEvent, context: LambdaContext) -> LambdaOutput: 
         Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
 
     """
+    try:
+        body = json.loads(event['body'])
 
-    # TODO: write the lambda handler in a *robust* manner to:
-    # - fetch the message in the event body of the LambdaEvent
-    # - call the above 'process' function with the message and get the returned value
-    # - return the LambdaOutput with the following format:
-    # {
-    #        'statusCode': XXX,
-    #        'body': 'Return_value_of_process_function',
-    #    }
-    #
+        message = body.get('message')
 
-    ...
+        # I am checking if the message is in the event body
+        if not message:
+            return {
+                'statusCode': 400,
+                'body': 'Missing message field in request.',
+            }
 
+        return {
+            'statusCode': 200,
+            'body': process(message),
+        }
+    except Exception:
+        logger.exception('An error occurred')
+        return {
+            'statusCode': 500,
+            'body': 'Internal server error. Missing body in request.',
+        }
