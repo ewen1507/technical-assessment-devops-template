@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lambda-function
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lambda-function
+  template:
+    metadata:
+      labels:
+        app: lambda-function
+    spec:
+      containers:
+        - name: lambda-container
+          image: localhost:5000/lambda-function
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+#          livenessProbe:
+#            httpGet:
+#              path: /2015-03-31/functions/function/invocations
+#              port: 8080
+#            initialDelaySeconds: 5
+#            periodSeconds: 10
+#          readinessProbe:
+#            httpGet:
+#              path: /2015-03-31/functions/function/invocations
+#              port: 8080
+#            initialDelaySeconds: 5
+#            periodSeconds: 10
