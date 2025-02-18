@@ -3,7 +3,7 @@ on:
     branches:
       - main
 jobs:
-  build-deploy:
+  test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -35,3 +35,34 @@ jobs:
           python -m pip install pytest pytest-cov
           pytest --cov-report term-missing --cov=lambda_app/ tests/
         continue-on-error: true
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker Image
+        run: docker build -t lambda-function .
+
+      - name: Run Lambda Tests with `test_lambda.sh`
+        run: |
+          chmod +x scripts/test_lambda.sh
+          docker run -p 3001:8080 lambda-function &
+          sleep 5
+          ./scripts/test_lambda.sh
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Push Docker Image to Registry
+        run: |
+          docker tag lambda-function localhost:5000/lambda-function
+          docker push localhost:5000/lambda-function
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
