@@ -7,6 +7,24 @@ DOCKER_IMAGE="lambda-function"
 K3D_REGISTRY="localhost:5005"
 K8S_NAMESPACE="default"
 
+echo "Checking if k3d and kubectl are installed..."
+
+if ! command -v k3d &> /dev/null
+then
+    echo "k3d is not installed. Installing..."
+    curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+fi
+
+if ! command -v kubectl &> /dev/null
+then
+    echo "kubectl is not installed. Installing..."
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    chmod +x kubectl
+    sudo mv kubectl /usr/local/bin/
+fi
+
+echo -e "\nK3D and kubectl are installed.\n"
+
 echo "Deleting the old Kubernetes cluster..."
 k3d cluster delete ${CLUSTER}
 
