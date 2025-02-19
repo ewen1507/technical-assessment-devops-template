@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: lambda-container
-          image: localhost:5000/lambda-function
+          image: lambda-registry:5000/lambda-function
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
