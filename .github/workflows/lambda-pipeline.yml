@@ -45,8 +45,13 @@ jobs:
       - name: Run Lambda Tests with `test_lambda.sh`
         run: |
           chmod +x scripts/test_lambda.sh
-          docker run -p 3001:8080 lambda-function &
-          sleep 5
+          docker run -d -p 3001:8080 lambda-function
+          echo "Waiting for API to be available..."
+          until curl -s http://localhost:3001/2015-03-31/functions/function/invocations > /dev/null; do
+            echo "❌ API not available yet"
+            sleep 2
+          done
+          echo "API created successfully!"
           ./scripts/test_lambda.sh
 
   deploy:
@@ -54,12 +59,9 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v4
-      - name: Push Docker Image to Registry
-        run: |
-          docker build -t lambda-function .
-          docker tag lambda-function localhost:5000/lambda-function
-          docker push localhost:5000/lambda-function
-      - name: Deploy to Kubernetes
-        run: |
-          kubectl apply -f k8s/deployment.yaml
-          kubectl apply -f k8s/service.yaml
+
+      - name: Make deploy script executable
+        run: chmod +x scripts/deploy.sh
+
+      - name: Run deployment script
+        run: ./scripts/deploy.sh
