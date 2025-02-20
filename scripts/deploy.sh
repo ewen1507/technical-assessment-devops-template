@@ -34,7 +34,7 @@ k3d cluster create ${CLUSTER} \
 
 echo -e "\n🛠️ Building and pushing the Docker image..."
 docker build -t lambda-function .
-docker tag lambda-function localhost:5005/lambda-function
+docker tag lambda-function localhost:5000/lambda-function
 docker push localhost:5000/lambda-function
 
 echo -e "\n🚀 Deploying the application on Kubernetes..."
@@ -62,8 +62,5 @@ if [[ -z "$NODE_PORT" ]]; then
 fi
 
 echo -e "\n✅ API available at: http://$NODE_IP:$NODE_PORT/2015-03-31/functions/function/invocations"
-
-echo -e "\n🔍 Running test request..."
-curl -s -d @events/event.json -H "Content-Type: application/json" "http://$NODE_IP:$NODE_PORT/2015-03-31/functions/function/invocations"
 
 exit 0
