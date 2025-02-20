@@ -49,9 +49,11 @@ def lambda_handler(event: LambdaEvent, context: LambdaContext) -> LambdaOutput: 
             return {
                 'isBase64Encoded': False,
                 'statusCode': 400,
-                'headers': { "Content-Type": "application/json" },
-                'multiValueHeaders': { "Access-Control-Allow-Origin": ["*"] },
-                'body': json.dumps({'error': 'Invalid request: missing or malformed body'}),
+                'headers': { 'Content-Type': 'application/json' },
+                'multiValueHeaders': { 'Access-Control-Allow-Origin': ['*'] },
+                'body': json.dumps(
+                    {'error': 'Invalid request: missing or malformed body'},
+                ),
             }
 
         try:
@@ -60,9 +62,11 @@ def lambda_handler(event: LambdaEvent, context: LambdaContext) -> LambdaOutput: 
             return {
                 'isBase64Encoded': False,
                 'statusCode': 400,
-                'headers': { "Content-Type": "application/json" },
-                'multiValueHeaders': { "Access-Control-Allow-Origin": ["*"] },
-                'body': json.dumps({'error': 'Invalid JSON format'}),
+                'headers': { 'Content-Type': 'application/json' },
+                'multiValueHeaders': { 'Access-Control-Allow-Origin': ['*'] },
+                'body': json.dumps(
+                    {'error': 'Invalid JSON format'},
+                ),
             }
 
         message = body.get('message')
@@ -70,26 +74,30 @@ def lambda_handler(event: LambdaEvent, context: LambdaContext) -> LambdaOutput: 
             return {
                 'isBase64Encoded': False,
                 'statusCode': 400,
-                'headers': { "Content-Type": "application/json" },
-                'multiValueHeaders': { "Access-Control-Allow-Origin": ["*"] },
-                'body': json.dumps({'error': 'Missing message field in request'}),
+                'headers': { 'Content-Type': 'application/json' },
+                'multiValueHeaders': { 'Access-Control-Allow-Origin': ['*'] },
+                'body': json.dumps(
+                    {'error': 'Missing message field in request'},
+                ),
             }
 
         response_body = {'message': process(message)}
         return {
             'isBase64Encoded': False,
             'statusCode': 200,
-            'headers': { "Content-Type": "application/json" },
-            'multiValueHeaders': { "Access-Control-Allow-Origin": ["*"] },
+            'headers': { 'Content-Type': 'application/json' },
+            'multiValueHeaders': { 'Access-Control-Allow-Origin': ['*'] },
             'body': json.dumps(response_body),
         }
 
-    except Exception as e:
-        logger.exception(f"An unexpected error occurred: {str(e)}")
+    except Exception:
+        logger.exception('An unexpected error occurred')
         return {
             'isBase64Encoded': False,
             'statusCode': 500,
-            'headers': {"Content-Type": "application/json"},
-            'multiValueHeaders': {"Access-Control-Allow-Origin": ["*"]},
-            'body': json.dumps({'error': 'Internal server error'}),
+            'headers': {'Content-Type': 'application/json'},
+            'multiValueHeaders': {'Access-Control-Allow-Origin': ['*']},
+            'body': json.dumps(
+                {'error': 'Internal server error'},
+            ),
         }
