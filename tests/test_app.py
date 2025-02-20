@@ -84,4 +84,4 @@ def test_unexpected_exception(mocker):
     assert body_content['error'] == 'Internal server error'
 
     assert response['headers']['Content-Type'] == "application/json"
-    assert response['multiValueHeaders']['Access-Control-Allow-Origin'] == ["*"]q
+    assert response['multiValueHeaders']['Access-Control-Allow-Origin'] == ["*"]
