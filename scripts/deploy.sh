@@ -3,7 +3,6 @@
 # Variables
 CLUSTER="lambda-cluster"
 CLUSTER_REGISTRY_PORT="5005"
-DOCKER_IMAGE="lambda-function"
 K8S_NAMESPACE="default"
 
 echo "Checking if k3d and kubectl are installed..."
@@ -34,7 +33,7 @@ k3d cluster create ${CLUSTER} \
 
 
 echo -e "\n🛠️ Building and pushing the Docker image..."
-docker build -t ${DOCKER_IMAGE} .
+docker build -t lambda-function .
 docker tag lambda-function localhost:5005/lambda-function
 docker push localhost:5000/lambda-function
 
