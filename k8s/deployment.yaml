@@ -18,15 +18,3 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
-#          livenessProbe:
-#            httpGet:
-#              path: /2015-03-31/functions/function/invocations
-#              port: 8080
-#            initialDelaySeconds: 5
-#            periodSeconds: 10
-#          readinessProbe:
-#            httpGet:
-#              path: /2015-03-31/functions/function/invocations
-#              port: 8080
-#            initialDelaySeconds: 5
-#            periodSeconds: 10
