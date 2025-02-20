@@ -31,7 +31,7 @@ RESPONSE=$(curl -s -d "@events/event_missing_body.json" -H "Content-Type: applic
 
 echo "$RESPONSE"
 
-if echo "$RESPONSE" | grep -q '"statusCode": 500'; then
+if echo "$RESPONSE" | grep -q '"statusCode": 400'; then
     echo "Test succeeded!"
 else
     echo "Test failed!"
