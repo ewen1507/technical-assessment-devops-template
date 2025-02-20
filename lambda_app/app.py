@@ -45,24 +45,51 @@ def lambda_handler(event: LambdaEvent, context: LambdaContext) -> LambdaOutput: 
 
     """
     try:
-        body = json.loads(event['body'])
-
-        message = body.get('message')
-
-        # I am checking if the message is in the event body
-        if not message:
+        if 'body' not in event or not isinstance(event['body'], str):
             return {
+                'isBase64Encoded': False,
                 'statusCode': 400,
-                'body': 'Missing message field in request.',
+                'headers': { "Content-Type": "application/json" },
+                'multiValueHeaders': { "Access-Control-Allow-Origin": ["*"] },
+                'body': json.dumps({'error': 'Invalid request: missing or malformed body'}),
             }
 
+        try:
+            body = json.loads(event['body'])
+        except json.JSONDecodeError:
+            return {
+                'isBase64Encoded': False,
+                'statusCode': 400,
+                'headers': { "Content-Type": "application/json" },
+                'multiValueHeaders': { "Access-Control-Allow-Origin": ["*"] },
+                'body': json.dumps({'error': 'Invalid JSON format'}),
+            }
+
+        message = body.get('message')
+        if not message:
+            return {
+                'isBase64Encoded': False,
+                'statusCode': 400,
+                'headers': { "Content-Type": "application/json" },
+                'multiValueHeaders': { "Access-Control-Allow-Origin": ["*"] },
+                'body': json.dumps({'error': 'Missing message field in request'}),
+            }
+
+        response_body = {'message': process(message)}
         return {
+            'isBase64Encoded': False,
             'statusCode': 200,
-            'body': process(message),
+            'headers': { "Content-Type": "application/json" },
+            'multiValueHeaders': { "Access-Control-Allow-Origin": ["*"] },
+            'body': json.dumps(response_body),
         }
-    except Exception:
-        logger.exception('An error occurred')
+
+    except Exception as e:
+        logger.exception(f"An unexpected error occurred: {str(e)}")
         return {
+            'isBase64Encoded': False,
             'statusCode': 500,
-            'body': 'Internal server error. Missing body in request.',
+            'headers': {"Content-Type": "application/json"},
+            'multiValueHeaders': {"Access-Control-Allow-Origin": ["*"]},
+            'body': json.dumps({'error': 'Internal server error'}),
         }
