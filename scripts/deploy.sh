@@ -4,7 +4,6 @@
 CLUSTER="lambda-cluster"
 CLUSTER_REGISTRY_PORT="5005"
 DOCKER_IMAGE="lambda-function"
-K3D_REGISTRY="localhost:5005"
 K8S_NAMESPACE="default"
 
 echo "Checking if k3d and kubectl are installed..."
@@ -23,43 +22,49 @@ then
     sudo mv kubectl /usr/local/bin/
 fi
 
-echo -e "\nK3D and kubectl are installed.\n"
+echo -e "\n✅ K3D and kubectl are installed."
 
 echo "Deleting the old Kubernetes cluster..."
 k3d cluster delete ${CLUSTER}
 
-echo -e "\nCreating the Kubernetes cluster with local registry..."
 k3d cluster create ${CLUSTER} \
     --registry-create lambda-registry:5000 \
     -p ${CLUSTER_REGISTRY_PORT}:5000@loadbalancer \
     -p 3001:3001@loadbalancer
 
-echo -e "\nBuilding and pushing the Docker image..."
-docker build -t ${DOCKER_IMAGE} .
-docker tag ${DOCKER_IMAGE} ${K3D_REGISTRY}/${DOCKER_IMAGE}
-docker push ${K3D_REGISTRY}/${DOCKER_IMAGE}
 
-echo -e "\nDeploying the application on Kubernetes..."
+echo -e "\n🛠️ Building and pushing the Docker image..."
+docker build -t ${DOCKER_IMAGE} .
+docker tag lambda-function localhost:5005/lambda-function
+docker push localhost:5000/lambda-function
+
+echo -e "\n🚀 Deploying the application on Kubernetes..."
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/services.yaml
 
-echo -e "\nInstalling MetalLB..."
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.10/config/manifests/metallb-native.yaml
+echo -e "\n⏳ Waiting for the pod to be ready..."
+while [[ $(kubectl get pods -n ${K8S_NAMESPACE} -l app=lambda-function -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do
+    echo "⏳ Pod is not ready yet. Waiting..."
+    sleep 5
+done
 
-echo -e "\nWaiting for MetalLB initialization..."
-kubectl wait --namespace metallb-system --for=condition=available deployment --all --timeout=60s
-kubectl apply -f k8s/metallb-config.yaml
-
-echo -e "\nChecking the deployment..."
-kubectl get pods -n ${K8S_NAMESPACE}
-kubectl get services -n ${K8S_NAMESPACE}
-
-EXTERNAL_IP=$(kubectl get service lambda-service -n ${K8S_NAMESPACE} -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
-
-if [ -n "$EXTERNAL_IP" ]; then
-    echo -e "\nAPI accessible at: http://$EXTERNAL_IP/2015-03-31/functions/function/invocations"
-    exit 0
-else
-    echo -e "\nWarning: External IP was not assigned. Try with kubectl get service lambda-service."
+# Récupérer l'IP du nœud Kubernetes (K3D)
+NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}')
+if [[ -z "$NODE_IP" ]]; then
+    echo "❌ ERROR: Failed to retrieve Node IP"
     exit 1
 fi
+
+# Récupérer le NodePort du service
+NODE_PORT=$(kubectl get svc lambda-service -n ${K8S_NAMESPACE} -o jsonpath='{.spec.ports[0].nodePort}')
+if [[ -z "$NODE_PORT" ]]; then
+    echo "❌ ERROR: Failed to retrieve NodePort"
+    exit 1
+fi
+
+echo -e "\n✅ API available at: http://$NODE_IP:$NODE_PORT/2015-03-31/functions/function/invocations"
+
+echo -e "\n🔍 Running test request..."
+curl -s -d @events/event.json -H "Content-Type: application/json" "http://$NODE_IP:$NODE_PORT/2015-03-31/functions/function/invocations"
+
+exit 0
