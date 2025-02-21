@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-config
+  namespace: monitoring
+data:
+  fluentd.conf: |
+    <source>
+      @type tail
+      path /var/log/containers/*.log
+      pos_file /var/log/fluentd-containers.log.pos
+      tag kubernetes.*
+      format json
+    </source>
+
+    <match **>
+      @type elasticsearch
+      host "elasticsearch.monitoring.svc.cluster.local"
+      port "9200"
+      logstash_format true
+      index_name fluentd
+      type_name fluentd
+      flush_interval 5s
+    </match>
