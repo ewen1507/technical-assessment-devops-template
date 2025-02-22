@@ -44,6 +44,7 @@ jobs:
         run: docker build -t lambda-function .
       - name: Run Lambda Tests with `test_lambda.sh`
         run: |
+          set -e
           chmod +x scripts/test_lambda.sh
           docker run -d -p 3001:8080 lambda-function
           echo "Waiting for API to be available..."

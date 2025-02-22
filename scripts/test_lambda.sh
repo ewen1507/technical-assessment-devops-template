@@ -12,6 +12,8 @@ VALID_TESTS=0
 # Var to store the number of failed tests
 FAILED_TESTS=0
 
+set -e
+
 echo -e "Invoking the lambda function\n"
 
 echo "Test Classic event"
@@ -52,3 +54,8 @@ fi
 
 echo -e "\n${COLOR_BGREEN}Valid tests: $VALID_TESTS${COLOR_OFF}"
 echo -e "${COLOR_BRED}Failed tests: $FAILED_TESTS${COLOR_OFF}"
+
+if [ $FAILED_TESTS -gt 0 ]; then
+  exit 1
+fi
+exit 0
