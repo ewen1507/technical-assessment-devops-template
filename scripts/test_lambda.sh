@@ -32,7 +32,7 @@ echo "Test missing body event"
 RESPONSE=$(curl -d @events/event_missing_body.json http://localhost:3001/2015-03-31/functions/function/invocations --silent)
 
 echo "Checking the response"
-if echo "$RESPONSE" | grep -q '"statusCode": 500'; then
+if echo "$RESPONSE" | grep -q '"statusCode": 400'; then
   echo -e "${COLOR_BGREEN}Test missing body executed successfully\n${COLOR_OFF}"
   VALID_TESTS=$((VALID_TESTS+1))
 else
