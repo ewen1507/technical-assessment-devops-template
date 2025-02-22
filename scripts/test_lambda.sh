@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 # Description: This scripts is used to test the lambda function locally using docker
 
 # Some Colour Codes
