@@ -29,10 +29,10 @@ RESPONSE=$(curl -s -d "@events/event.json" -H "Content-Type: application/json" "
 echo "$RESPONSE"
 
 if echo "$RESPONSE" | grep -q '"statusCode": 200'; then
-    $VALID_TESTS=$((VALID_TESTS+1))
+    VALID_TESTS=$((VALID_TESTS+1))
     echo "Test succeeded!"
 else
-    $FAILED_TESTS=$((FAILED_TESTS+1))
+    FAILED_TESTS=$((FAILED_TESTS+1))
     echo "Test failed!"
 fi
 
@@ -42,10 +42,10 @@ RESPONSE=$(curl -s -d "@events/event_missing_body.json" -H "Content-Type: applic
 echo "$RESPONSE"
 
 if echo "$RESPONSE" | grep -q '"statusCode": 400'; then
-    $VALID_TESTS=$((VALID_TESTS+1))
+    VALID_TESTS=$((VALID_TESTS+1))
     echo "Test succeeded!"
 else
-    $FAILED_TESTS=$((FAILED_TESTS+1))
+    FAILED_TESTS=$((FAILED_TESTS+1))
     echo "Test failed!"
 fi
 
@@ -55,10 +55,10 @@ RESPONSE=$(curl -s -d "@events/event_no_message.json" -H "Content-Type: applicat
 echo "$RESPONSE"
 
 if echo "$RESPONSE" | grep -q '"statusCode": 400'; then
-    $VALID_TESTS=$((VALID_TESTS+1))
+    VALID_TESTS=$((VALID_TESTS+1))
     echo "Test succeeded!"
 else
-    $FAILED_TESTS=$((FAILED_TESTS+1))
+    FAILED_TESTS=$((FAILED_TESTS+1))
     echo "Test failed!"
 fi
 
