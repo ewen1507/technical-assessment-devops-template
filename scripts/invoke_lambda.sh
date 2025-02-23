@@ -46,6 +46,7 @@ function run_test() {
 run_test "events/event.json" 200 "Classic event"
 run_test "events/event_missing_body.json" 400 "Missing body event"
 run_test "events/event_no_message.json" 400 "No message event"
+run_test "events/event_empty_body.json" 400 "Empty body event"
 
 echo -e "\n${COLOR_BGREEN}Valid tests: $VALID_TESTS${COLOR_OFF}"
 echo -e "${COLOR_BRED}Failed tests: $FAILED_TESTS${COLOR_OFF}"

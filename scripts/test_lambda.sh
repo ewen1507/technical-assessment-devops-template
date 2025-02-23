@@ -32,9 +32,11 @@ function run_test() {
   echo "Checking the response"
   if echo "$RESPONSE" | grep -q "\"statusCode\": $expected_status"; then
     echo -e "${COLOR_BGREEN}Test '$test_name' executed successfully\n${COLOR_OFF}"
+    echo "Response: $RESPONSE"
     VALID_TESTS=$((VALID_TESTS+1))
   else
     echo -e "${COLOR_BRED}Test '$test_name' failed\n${COLOR_OFF}"
+    echo "Response: $RESPONSE"
     FAILED_TESTS=$((FAILED_TESTS+1))
   fi
 }
@@ -42,6 +44,7 @@ function run_test() {
 run_test "events/event.json" 200 "Classic event"
 run_test "events/event_missing_body.json" 400 "Missing body event"
 run_test "events/event_no_message.json" 400 "No message event"
+run_test "events/event_empty_body.json" 400 "Empty body event"
 
 echo -e "\n${COLOR_BGREEN}Valid tests: $VALID_TESTS${COLOR_OFF}"
 echo -e "${COLOR_BRED}Failed tests: $FAILED_TESTS${COLOR_OFF}"
