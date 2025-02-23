@@ -2,23 +2,19 @@
 
 set -e
 
-# Configuration
 SERVICE_NAME="lambda-service"
 NAMESPACE="default"
 PORT=80
 NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}')
 EXPOSED_PORT=$(kubectl get service "$SERVICE_NAME" -n "$NAMESPACE" -o jsonpath='{.spec.ports[0].nodePort}')
 
-# Some Colour Codes
 COLOR_OFF='\033[0m'
 COLOR_BRED='\033[1;31m'
 COLOR_BGREEN='\033[1;32m'
 
-# Var to store the number of valid tests
 VALID_TESTS=0
 FAILED_TESTS=0
 
-# Vérifier si un fichier d'événement existe
 function check_event_file() {
     if [[ ! -f "$1" ]]; then
         echo -e "${COLOR_BRED}Error: Event file '$1' not found!${COLOR_OFF}"
@@ -26,7 +22,6 @@ function check_event_file() {
     fi
 }
 
-# Fonction pour exécuter un test
 function run_test() {
     local event_file=$1
     local expected_status=$2
@@ -48,12 +43,10 @@ function run_test() {
     fi
 }
 
-# Exécution des tests
 run_test "events/event.json" 200 "Classic event"
 run_test "events/event_missing_body.json" 400 "Missing body event"
 run_test "events/event_no_message.json" 400 "No message event"
 
-# Résumé des résultats
 echo -e "\n${COLOR_BGREEN}Valid tests: $VALID_TESTS${COLOR_OFF}"
 echo -e "${COLOR_BRED}Failed tests: $FAILED_TESTS${COLOR_OFF}"
 
