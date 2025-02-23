@@ -6,62 +6,54 @@ set -e
 SERVICE_NAME="lambda-service"
 NAMESPACE="default"
 PORT=80
-EVENT_FILE="events/event.json"
+NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}')
+EXPOSED_PORT=$(kubectl get service "$SERVICE_NAME" -n "$NAMESPACE" -o jsonpath='{.spec.ports[0].nodePort}')
+
+# Some Colour Codes
+COLOR_OFF='\033[0m'
+COLOR_BRED='\033[1;31m'
+COLOR_BGREEN='\033[1;32m'
 
 # Var to store the number of valid tests
 VALID_TESTS=0
-
-# Var to store the number of failed tests
 FAILED_TESTS=0
 
-NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}')
+# Vérifier si un fichier d'événement existe
+function check_event_file() {
+    if [[ ! -f "$1" ]]; then
+        echo -e "${COLOR_BRED}Error: Event file '$1' not found!${COLOR_OFF}"
+        exit 1
+    fi
+}
 
-EXPOSED_PORT=$(kubectl get service $SERVICE_NAME -n $NAMESPACE -o jsonpath='{.spec.ports[0].nodePort}')
+# Fonction pour exécuter un test
+function run_test() {
+    local event_file=$1
+    local expected_status=$2
+    local test_name=$3
 
-if [[ ! -f "$EVENT_FILE" ]]; then
-    echo "Error: Event file '$EVENT_FILE' not found!"
-    exit 1
-fi
+    check_event_file "$event_file"
 
-echo "Sending request with classic event"
-RESPONSE=$(curl -s -d "@events/event.json" -H "Content-Type: application/json" "http://$NODE_IP:$EXPOSED_PORT/2015-03-31/functions/function/invocations")
+    echo -e "\nRunning test: $test_name"
+    RESPONSE=$(curl -s -d "@$event_file" -H "Content-Type: application/json" "http://$NODE_IP:$EXPOSED_PORT/2015-03-31/functions/function/invocations")
 
-echo "$RESPONSE"
+    echo "$RESPONSE"
 
-if echo "$RESPONSE" | grep -q '"statusCode": 200'; then
-    VALID_TESTS=$((VALID_TESTS+1))
-    echo "Test succeeded!"
-else
-    FAILED_TESTS=$((FAILED_TESTS+1))
-    echo "Test failed!"
-fi
+    if echo "$RESPONSE" | grep -q "\"statusCode\": $expected_status"; then
+        echo -e "${COLOR_BGREEN}Test '$test_name' executed successfully${COLOR_OFF}"
+        VALID_TESTS=$((VALID_TESTS+1))
+    else
+        echo -e "${COLOR_BRED}Test '$test_name' failed${COLOR_OFF}"
+        FAILED_TESTS=$((FAILED_TESTS+1))
+    fi
+}
 
-echo -e "\nSending request with missing body event"
-RESPONSE=$(curl -s -d "@events/event_missing_body.json" -H "Content-Type: application/json" "http://$NODE_IP:$EXPOSED_PORT/2015-03-31/functions/function/invocations")
+# Exécution des tests
+run_test "events/event.json" 200 "Classic event"
+run_test "events/event_missing_body.json" 400 "Missing body event"
+run_test "events/event_no_message.json" 400 "No message event"
 
-echo "$RESPONSE"
-
-if echo "$RESPONSE" | grep -q '"statusCode": 400'; then
-    VALID_TESTS=$((VALID_TESTS+1))
-    echo "Test succeeded!"
-else
-    FAILED_TESTS=$((FAILED_TESTS+1))
-    echo "Test failed!"
-fi
-
-echo -e "\nSending request with no message event"
-RESPONSE=$(curl -s -d "@events/event_no_message.json" -H "Content-Type: application/json" "http://$NODE_IP:$EXPOSED_PORT/2015-03-31/functions/function/invocations")
-
-echo "$RESPONSE"
-
-if echo "$RESPONSE" | grep -q '"statusCode": 400'; then
-    VALID_TESTS=$((VALID_TESTS+1))
-    echo "Test succeeded!"
-else
-    FAILED_TESTS=$((FAILED_TESTS+1))
-    echo "Test failed!"
-fi
-
+# Résumé des résultats
 echo -e "\n${COLOR_BGREEN}Valid tests: $VALID_TESTS${COLOR_OFF}"
 echo -e "${COLOR_BRED}Failed tests: $FAILED_TESTS${COLOR_OFF}"
 
